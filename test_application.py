@@ -18,11 +18,11 @@ def test_duplicate_route_adding(api):
             resp.text = "hello"
 
 
-def test_bumbo_test_client_can_send_requests(api, client):
+def test_client_can_send_requests(api, client):
     RESPONSE_TEXT = "Hello world"
 
     @api.route("/test")
-    def cool(req, resp):
+    def check(req, resp):
         resp.text = RESPONSE_TEXT
 
     assert client.get("http://testserver/test").text == RESPONSE_TEXT
@@ -48,7 +48,7 @@ def test_class_based_handler_get(api, client):
     response_text = "This is a test of get request"
 
     @api.route("/test")
-    class BookResource:
+    class TestResource:
         def get(self, req, resp):
             resp.text = response_text
 
@@ -59,7 +59,7 @@ def test_class_based_handler_post(api, client):
     response_text = "This is a test of post request"
 
     @api.route("/test")
-    class BookResource:
+    class TestResource:
         def post(self, req, resp):
             resp.text = response_text
 
@@ -68,7 +68,7 @@ def test_class_based_handler_post(api, client):
 
 def test_class_based_handler_not_allowed_method(api, client):
     @api.route("/test")
-    class BookResource:
+    class TestResource:
         def post(self, req, resp):
             resp.text = "hello world"
 
