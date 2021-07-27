@@ -8,17 +8,26 @@ app = API()
 def home(request, response):
     response.text = "Hello from the HOME page"
 
+
 @app.route('/about')
 def about(request, response):
     response.text = "Hello from the ABOUT page"
+
 
 @app.route('/hello/{name}')
 def hello(request, response, name):
     response.text = f'Hello, {name}'
 
+
 @app.route('/sum/{a:d}/{b:d}')
 def hello(request, response, a, b):
     response.text = f'Hello, {a+b}'
+
+
+def handler(req, resp):
+    resp.text = "sample"
+
+app.add_route("/sample", handler)
 
 
 @app.route("/book")
