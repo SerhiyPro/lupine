@@ -6,7 +6,10 @@ app = API()
 
 @app.route('/home')
 def home(request, response):
-    response.text = "Hello from the HOME page"
+    response.body = app.template(
+        'index.html',
+        context={'name': 'Lupine', 'title': 'New framework'}
+    ).encode()
 
 
 @app.route('/about')
@@ -21,7 +24,7 @@ def hello(request, response, name):
 
 @app.route('/sum/{a:d}/{b:d}')
 def hello(request, response, a, b):
-    response.text = f'Hello, {a+b}'
+    response.text = f'The sum is, {a+b}'
 
 
 def handler(req, resp):
