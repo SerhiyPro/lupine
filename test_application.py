@@ -173,4 +173,54 @@ def test_middleware_methods_are_called(api, client):
     assert process_request_called is True
     assert process_response_called is True
 
-    
+
+def test_allowed_methods_for_function_based_handlers(api, client):
+    @api.route("/home", allowed_methods=["post"])
+    def home(req, resp):
+        resp.text = "Hello"
+
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/home")
+
+    assert client.post("http://testserver/home").text == "Hello"
+
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/home")
+
+
+def test_allowed_methods_for_function_based_handlers_alternative_route_adding(api, client):
+    def home(req, resp):
+        resp.text = "Hello"
+
+    api.add_route("/home", home, allowed_methods=["post"])
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/home")
+
+    assert client.post("http://testserver/home").text == "Hello"
+
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/home")
+
+
+def test_empty_allowed_methods_for_function_based_handlers(api, client):
+    @api.route("/home", allowed_methods=[])
+    def home(req, resp):
+        resp.text = "Shouldn't be accessible"
+
+    with pytest.raises(AttributeError):
+        client.get("http://testserver/home")
+
+    with pytest.raises(AttributeError):
+        client.post("http://testserver/home")
+
+
+def test_nullable_allowed_methods_for_function_based_handlers(api, client):
+    @api.route("/home", allowed_methods=None)
+    def home(req, resp):
+        if req.method.lower()  == 'get':
+            resp.text = "Hello"
+        else:
+            resp.text = "World"
+
+    assert client.get("http://testserver/home").text == "Hello"
+    assert client.post("http://testserver/home").text == "World"
