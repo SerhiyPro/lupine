@@ -6,11 +6,11 @@ app = API()
 
 
 @app.route('/home')
-def home(request, response):
-    response.body = app.template(
-        'index.html',
-        context={'name': 'Lupine', 'title': 'New framework'}
-    ).encode()
+def template_handler(req, resp):
+    resp.html = app.template(
+        "index.html",
+        context={"name": "Bumbo", "title": "Best Framework"}
+    )
 
 
 @app.route('/about')
@@ -26,6 +26,16 @@ def hello(request, response, name):
 @app.route('/sum/{a:d}/{b:d}')
 def hello(request, response, a, b):
     response.text = f'The sum is, {a+b}'
+
+
+@app.route("/json")
+def json_handler(req, resp):
+    resp.json = {"name": "data", "type": "JSON"}
+
+
+@app.route("/text")
+def text_handler(req, resp):
+    resp.text = "This is a simple text"
 
 
 def handler(req, resp):

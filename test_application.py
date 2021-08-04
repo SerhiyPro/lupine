@@ -175,28 +175,32 @@ def test_middleware_methods_are_called(api, client):
 
 
 def test_allowed_methods_for_function_based_handlers(api, client):
+    response_text = "Just Plain Text"
+
     @api.route("/home", allowed_methods=["post"])
     def home(req, resp):
-        resp.text = "Hello"
+        resp.text = response_text
 
     with pytest.raises(AttributeError):
         client.get("http://testserver/home")
 
-    assert client.post("http://testserver/home").text == "Hello"
+    assert client.post("http://testserver/home").text == response_text
 
     with pytest.raises(AttributeError):
         client.get("http://testserver/home")
 
 
 def test_allowed_methods_for_function_based_handlers_alternative_route_adding(api, client):
+    response_text = "Just Plain Text"
+
     def home(req, resp):
-        resp.text = "Hello"
+        resp.text = response_text
 
     api.add_route("/home", home, allowed_methods=["post"])
     with pytest.raises(AttributeError):
         client.get("http://testserver/home")
 
-    assert client.post("http://testserver/home").text == "Hello"
+    assert client.post("http://testserver/home").text == response_text
 
     with pytest.raises(AttributeError):
         client.get("http://testserver/home")
@@ -224,3 +228,55 @@ def test_nullable_allowed_methods_for_function_based_handlers(api, client):
 
     assert client.get("http://testserver/home").text == "Hello"
     assert client.post("http://testserver/home").text == "World"
+
+
+def test_json_response_helper(api, client):
+    @api.route("/json")
+    def json_handler(req, resp):
+        resp.json = {"name": "bubmo"}
+
+    response = client.get("http://testserver/json")
+    json_body = response.json()
+
+    assert response.headers["Content-Type"] == "application/json"
+    assert json_body["name"] == "bubmo"
+
+
+def test_html_response_helper(api, client):
+    @api.route("/html")
+    def html_handler(req, resp):
+        resp.html = api.template("index.html", context={"title": "Best Title", "name": "Best Name"})
+
+    response = client.get("http://testserver/html")
+
+    assert "text/html" in response.headers["Content-Type"]
+    assert "Best Title" in response.text
+    assert "Best Name" in response.text
+
+
+def test_text_response_helper(api, client):
+    response_text = "Just Plain Text"
+
+    @api.route("/text")
+    def text_handler(req, resp):
+        resp.text = response_text
+
+    response = client.get("http://testserver/text")
+
+    assert "text/plain" in response.headers["Content-Type"]
+    assert response.text == response_text
+
+
+def test_manually_setting_body(api, client):
+    response_text = "Just Plain Text"
+
+    @api.route("/body")
+    def text_handler(req, resp):
+        resp.body = response_text.encode()
+        resp.content_type = "text/plain"
+
+    response = client.get("http://testserver/body")
+
+    assert "text/plain" in response.headers["Content-Type"]
+    assert response.text == response_text
+
