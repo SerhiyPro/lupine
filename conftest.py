@@ -1,6 +1,6 @@
 import pytest
 
-from api import API
+from lupine import API
 
 
 @pytest.fixture

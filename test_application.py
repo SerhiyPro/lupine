@@ -1,7 +1,7 @@
 import pytest
 
-from api import API
-from middleware import Middleware
+from lupine import API
+from lupine import Middleware
 
 
 FILE_DIR = "css"
