@@ -27,13 +27,27 @@ def greeting(request, response, name):
     response.text = f"Hello, {name}"
 
 
+@app.route('/sum/{a:d}/{b:d}')
+def hello(request, response, a, b):
+    response.text = f'The sum is, {a+b}'
+
+
 @app.route("/book")
 class BooksResource:
-    def get(self, req, resp):
-        resp.text = "Books Page"
+    def get(self, request, response):
+        response.text = "Books Page"
 
-    def post(self, req, resp):
-        resp.text = "Endpoint to create a book"
+    def post(self, request, response):
+        response.text = "Endpoint to create a book"
+    
+    def put(self, request, response):
+        response.text = "Endpoint to update a book"
+    
+    def patch(self, request, response):
+        response.text = "Endpoint to patch a book"
+    
+    def delete(self, request, response):
+        response.text = "Endpoint to delete a book"
 
 
 @app.route("/json")
