@@ -143,3 +143,26 @@ class SimpleCustomMiddleware(Middleware):
 
 app.add_middleware(SimpleCustomMiddleware)
 ```
+
+### Exception handler
+
+You can create custom exception handlers and add them to your project:
+
+```python
+from api import API
+from middleware import Middleware
+
+
+app = API()
+
+
+def custom_exception_handler(request, response, exception_cls):
+    response.text = f'Oops, an error has occured, {exception_cls}'
+
+app.add_exception_handler(custom_exception_handler)
+
+
+@app.route("/exception")
+def exception_throwing_handler(request, response):
+    raise AssertionError("This handler should not be used.")
+```
