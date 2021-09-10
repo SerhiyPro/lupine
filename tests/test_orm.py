@@ -1,4 +1,5 @@
 import sqlite3
+import pytest
 
 
 def test_create_db(db):
@@ -131,3 +132,30 @@ def test_query_all_books(db, Author, Book):
 
     assert len(books) == 2
     assert books[1].author.name == "Arash Kun"
+
+
+def test_update_author(db, Author):
+    db.create(Author)
+    john = Author(name="John Doe", age=23)
+    db.save(john)
+
+    john.age = 43
+    john.name = "John Wick"
+    db.update(john)
+
+    john_from_db = db.get(Author, id=john.id)
+
+    assert john_from_db.age == 43
+    assert john_from_db.name == "John Wick"
+
+
+
+def test_delete_author(db, Author):
+    db.create(Author)
+    john = Author(name="John Doe", age=23)
+    db.save(john)
+
+    db.delete(Author, id=1)
+
+    with pytest.raises(Exception):
+        db.get(Author, 1)
