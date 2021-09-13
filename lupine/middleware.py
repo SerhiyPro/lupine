@@ -13,10 +13,10 @@ class Middleware:
     def add(self, middleware_cls):
         self.app = middleware_cls(self.app)
 
-    def process_request(self, req):
+    def process_request(self, request):
         pass
 
-    def process_response(self, req, resp):
+    def process_response(self, request, response):
         pass
 
     def handle_request(self, request):

@@ -8,7 +8,7 @@ from wsgiadapter import WSGIAdapter as RequestWSGIAdapter
 from jinja2 import Environment, FileSystemLoader
 from whitenoise import WhiteNoise
 
-from .response import Response
+from .response import Response, TextResponse
 from .middleware import Middleware
 
 
@@ -58,9 +58,11 @@ class API:
             return handler
         return wrapper
     
-    def default_response(self, response):
+    def default_response(self):
+        response = TextResponse()
         response.status_code = 404
-        response.text = "Not found."
+        response.data = "Not found."
+        return response
     
     def find_handler(self, request_path):
         for path, handler_data in self.routes.items():
@@ -86,14 +88,15 @@ class API:
                     if request.method.lower() not in allowed_methods:
                         raise AttributeError("Method not allowed", request.method)
                 
-                handler(request, response, **kwargs)
+                response = handler(request, **kwargs)
             else:
-                self.default_response(response)
+                response = self.default_response()
+                pass
         except Exception as e:
             if self.exception_handler is None:
                 raise e
             else:
-                self.exception_handler(request, response, e)
+                response = self.exception_handler(request, e)
 
         return response
     

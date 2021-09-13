@@ -21,16 +21,24 @@ class Response:
             status=self.status_code
         )
         return response(environ, start_response)
-
+    
     def set_body_and_content_type(self):
-        if self.json is not None:
-            self.body = json.dumps(self.json).encode("UTF-8")
-            self.content_type = "application/json"
+        pass
 
-        if self.html is not None:
-            self.body = self.html.encode()
-            self.content_type = "text/html"
 
-        if self.text is not None:
-            self.body = self.text
-            self.content_type = "text/plain"
+class TextResponse(Response):
+    def set_body_and_content_type(self):
+        self.body = self.data
+        self.content_type = "text/plain"
+
+
+class JsonResponse(Response):
+    def set_body_and_content_type(self):
+        self.body = json.dumps(self.data).encode("UTF-8")
+        self.content_type = "application/json"
+
+
+class HtmlResponse(Response):
+    def set_body_and_content_type(self):
+        self.body = self.data.encode()
+        self.content_type = "text/html"

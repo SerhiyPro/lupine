@@ -1,6 +1,7 @@
 import pytest
 
 from lupine import API, Middleware
+from lupine.response import JsonResponse, Response, TextResponse, HtmlResponse
 
 
 FILE_DIR = "css"
@@ -18,35 +19,45 @@ def _create_static(static_dir):
 
 def test_basic_route_adding(api):
     @api.route("/test-route")
-    def check(req, resp):
-        resp.text = "hello"
+    def check(request):
+        response = TextResponse()
+        response.data = "hello"
+        return response
 
 
 def test_duplicate_route_adding(api):
     @api.route("/test-route")
-    def check(req, resp):
-        resp.text = "hello"
+    def check(request):
+        response = TextResponse()
+        response.data = "hello"
+        return response
     
     with pytest.raises(AssertionError):
         @api.route("/test-route")
-        def check_duplicate_route(req, resp):
-            resp.text = "hello"
+        def check_duplicate_route(request):
+            response = TextResponse()
+            response.data = "hello"
+            return response
 
 
 def test_client_can_send_requests(api, client):
     RESPONSE_TEXT = "Hello world"
 
     @api.route("/test")
-    def check(req, resp):
-        resp.text = RESPONSE_TEXT
+    def check(request):
+        response = TextResponse()
+        response.data = RESPONSE_TEXT
+        return response
 
     assert client.get("http://testserver/test").text == RESPONSE_TEXT
 
 
 def test_parameterized_route(api, client):
     @api.route("/{name}")
-    def hello(req, resp, name):
-        resp.text = f"hello, {name}"
+    def hello(request, name):
+        response = TextResponse()
+        response.data = f'hello, {name}'
+        return response
 
     assert client.get("http://testserver/test").text == "hello, test"
     assert client.get("http://testserver/test1").text == "hello, test1"
@@ -64,8 +75,10 @@ def test_class_based_handler_get(api, client):
 
     @api.route("/test")
     class TestResource:
-        def get(self, req, resp):
-            resp.text = response_text
+        def get(self, request):
+            response = TextResponse()
+            response.data = response_text
+            return response
 
     assert client.get("http://testserver/test").text == response_text
 
@@ -75,8 +88,10 @@ def test_class_based_handler_post(api, client):
 
     @api.route("/test")
     class TestResource:
-        def post(self, req, resp):
-            resp.text = response_text
+        def post(self, request):
+            response = TextResponse()
+            response.data = response_text
+            return response
 
     assert client.post("http://testserver/test").text == response_text
 
@@ -84,8 +99,10 @@ def test_class_based_handler_post(api, client):
 def test_class_based_handler_not_allowed_method(api, client):
     @api.route("/test")
     class TestResource:
-        def post(self, req, resp):
-            resp.text = "hello world"
+        def post(self, request):
+            response = TextResponse()
+            response.data = 'Hello World'
+            return response
 
     with pytest.raises(AttributeError):
         client.get("http://testserver/test")
@@ -94,8 +111,10 @@ def test_class_based_handler_not_allowed_method(api, client):
 def test_alternative_route(api, client):
     response_text = "Alternative way to add a route"
 
-    def home(req, resp):
-        resp.text = response_text
+    def home(request):
+        response = TextResponse()
+        response.data = response_text
+        return response
 
     api.add_route("/alternative", home)
 
@@ -104,8 +123,10 @@ def test_alternative_route(api, client):
 
 def test_template_rendering(api, client):
     @api.route("/html")
-    def html_handler(req, resp):
-        resp.body = api.template("index.html", context={"title": "Some Title", "name": "Some Name"}).encode()
+    def html_handler(request):
+        response = HtmlResponse()
+        response.data = api.template("index.html", context={"title": "Some Title", "name": "Some Name"})
+        return response
 
     response = client.get("http://testserver/html")
 
@@ -115,13 +136,15 @@ def test_template_rendering(api, client):
 
 
 def test_custom_exception_handler(api, client):
-    def custom_exception_handler(req, resp, exc):
-        resp.text = "AttributeErrorHappened"
+    def custom_exception_handler(request, exc):
+        response = TextResponse()
+        response.data = "AttributeErrorHappened"
+        return response
 
     api.add_exception_handler(custom_exception_handler)
 
     @api.route("/")
-    def index(req, resp):
+    def index(request):
         raise AttributeError()
 
     response = client.get("http://testserver/")
@@ -157,15 +180,17 @@ def test_middleware_methods_are_called(api, client):
             nonlocal process_request_called
             process_request_called = True
 
-        def process_response(self, req, resp):
+        def process_response(self, request, response):
             nonlocal process_response_called
             process_response_called = True
 
     api.add_middleware(CallMiddlewareMethods)
 
     @api.route('/')
-    def index(req, res):
-        res.text = "YOLO"
+    def index(request):
+        response = TextResponse()
+        response.data = 'Test'
+        return response
 
     client.get('http://testserver/')
 
@@ -177,8 +202,10 @@ def test_allowed_methods_for_function_based_handlers(api, client):
     response_text = "Just Plain Text"
 
     @api.route("/home", allowed_methods=["post"])
-    def home(req, resp):
-        resp.text = response_text
+    def home(request):
+        response = TextResponse()
+        response.data = response_text
+        return response
 
     with pytest.raises(AttributeError):
         client.get("http://testserver/home")
@@ -192,8 +219,10 @@ def test_allowed_methods_for_function_based_handlers(api, client):
 def test_allowed_methods_for_function_based_handlers_alternative_route_adding(api, client):
     response_text = "Just Plain Text"
 
-    def home(req, resp):
-        resp.text = response_text
+    def home(request):
+        response = TextResponse()
+        response.data = response_text
+        return response
 
     api.add_route("/home", home, allowed_methods=["post"])
     with pytest.raises(AttributeError):
@@ -207,8 +236,10 @@ def test_allowed_methods_for_function_based_handlers_alternative_route_adding(ap
 
 def test_empty_allowed_methods_for_function_based_handlers(api, client):
     @api.route("/home", allowed_methods=[])
-    def home(req, resp):
-        resp.text = "Shouldn't be accessible"
+    def home(request):
+        response = TextResponse()
+        response.data = 'Shouldn\'t be seeen'
+        return response
 
     with pytest.raises(AttributeError):
         client.get("http://testserver/home")
@@ -219,11 +250,13 @@ def test_empty_allowed_methods_for_function_based_handlers(api, client):
 
 def test_nullable_allowed_methods_for_function_based_handlers(api, client):
     @api.route("/home", allowed_methods=None)
-    def home(req, resp):
-        if req.method.lower()  == 'get':
-            resp.text = "Hello"
+    def home(request):
+        response = TextResponse()
+        if request.method.lower()  == 'get':
+            response.data = 'Hello'
         else:
-            resp.text = "World"
+            response.data = "World"
+        return response
 
     assert client.get("http://testserver/home").text == "Hello"
     assert client.post("http://testserver/home").text == "World"
@@ -231,8 +264,10 @@ def test_nullable_allowed_methods_for_function_based_handlers(api, client):
 
 def test_json_response_helper(api, client):
     @api.route("/json")
-    def json_handler(req, resp):
-        resp.json = {"name": "bubmo"}
+    def json_handler(request):
+        response = JsonResponse()
+        response.data = {"name": "bubmo"}
+        return response
 
     response = client.get("http://testserver/json")
     json_body = response.json()
@@ -243,8 +278,10 @@ def test_json_response_helper(api, client):
 
 def test_html_response_helper(api, client):
     @api.route("/html")
-    def html_handler(req, resp):
-        resp.html = api.template("index.html", context={"title": "Best Title", "name": "Best Name"})
+    def html_handler(request):
+        response = HtmlResponse()
+        response.data = api.template("index.html", context={"title": "Best Title", "name": "Best Name"})
+        return response
 
     response = client.get("http://testserver/html")
 
@@ -257,8 +294,10 @@ def test_text_response_helper(api, client):
     response_text = "Just Plain Text"
 
     @api.route("/text")
-    def text_handler(req, resp):
-        resp.text = response_text
+    def text_handler(request):
+        response = TextResponse()
+        response.data = response_text
+        return response
 
     response = client.get("http://testserver/text")
 
@@ -270,12 +309,13 @@ def test_manually_setting_body(api, client):
     response_text = "Just Plain Text"
 
     @api.route("/body")
-    def text_handler(req, resp):
-        resp.body = response_text.encode()
-        resp.content_type = "text/plain"
+    def text_handler(request):
+        response = Response()
+        response.body = response_text.encode()
+        response.content_type = "text/plain"
+        return response
 
     response = client.get("http://testserver/body")
 
     assert "text/plain" in response.headers["Content-Type"]
     assert response.text == response_text
-
