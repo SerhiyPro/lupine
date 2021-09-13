@@ -78,7 +78,7 @@ def json_handler(request):
 @app.route("/template")
 def template_handler(request):
     response = HtmlResponse()
-    resp.data = app.template(
+    response.data = app.template(
         "index.html", context={"name": "Lupine", "title": "Best Framework"}
     )
     return response
